@@ -8,8 +8,8 @@ Projekt na zajęcia "Wprowadzenie do pracy projektowej metodą PBL"
 
 ### Linux
 
-`cmake -B build .`
-`cmake --build build`
+1. `cmake -B build .`
+2. `cmake --build build`
 
 ### Windows
 
@@ -17,5 +17,4 @@ TBD
 
 ## Autorzy
 
-Michał Tomczyk
-Łukasz Tomczyk
+Michał Tomczyk, Łukasz Tomczyk
