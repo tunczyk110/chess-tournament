@@ -10,22 +10,17 @@
 #include <print>
 #include "competitor.hpp"
 
+struct CompetitorResults
+{
+    size_t won = 0, lost = 0, drawn = 0;
+};
+
 class Tournament
 {
-private:
-    class System {
-    public:
-        virtual std::string_view get_description() = 0;
-        virtual size_t get_rounds(std::span<const Competitor>) = 0;
-        virtual void prepare_pairings(std::span<const Competitor>) = 0;
-
-        virtual ~System() {}
-    };
 public:
     // types
     using CompetitorId = int;
     using RoundNum = size_t;
-    using Points = unsigned;
 
     struct Match {
         enum class Status {
@@ -39,20 +34,35 @@ public:
         size_t table_number;
         Status status;
     };
-    using Pairings = std::vector<Match>;
-    using Scores = std::map<CompetitorId, Points>;
 
-    struct Status
-    {
-        RoundNum round_number;
-        const Pairings& matches;
-        const Scores& scores;
+    using Pairings = std::vector<Match>;
+    using Scores = std::map<CompetitorId, CompetitorResults>;
+    using CompetitorsMap = std::map<CompetitorId, Competitor>;
+
+    class System {
+    public:
+        virtual std::string_view get_description() = 0;
+        virtual RoundNum get_rounds(CompetitorsMap&) = 0;
+        virtual void prepare_pairings(CompetitorsMap&, Pairings&) = 0;
+        virtual std::expected<void, std::string> can_begin_tournament(CompetitorsMap&) = 0;
+        virtual void score_competitors(const Pairings&, Scores&, std::set<CompetitorId>&) = 0;
+
+        virtual ~System() {}
     };
 
     enum class State {
         Signups,
         InProgress,
         Finished
+    };
+
+    struct Status
+    {
+        State state;
+        // if state isn't InProgress, values of following fields are meaningless
+        RoundNum round_number;
+        const Pairings& matches;
+        const Scores& scores;
     };
 
     enum class ReportResult {
@@ -72,51 +82,33 @@ public:
     {}
 
     // methods
-    std::expected<void, std::string> begin_tournament() {
-		if (state.first != State::Signups) {
-			return std::unexpected("Turniej już się rozpoczął lub zakończył.");
-		}
-		std::println("Rozpoczynam turniej typu: {}", system->get_description());
-		state.first = State::InProgress;
-        return {}; 
-    }
-    std::expected<State, std::string> complete_round() { return state.second == 1 ? State::Finished : State::InProgress; }
-    void add_competitors(std::span<const Competitor> comps)
-    {
-        for (const auto& x : comps)
-        {
-			competitors.emplace(next_competitor_id++, x);
-        }
-    }
-    Status get_current_status() { return {state.second, current_matches, competitor_points}; }
-	State get_current_tour_state() { return state.first; }
-    const Competitor& get_competitor(CompetitorId id) { return competitors.find(id)->second; }
-    void drop_out_competitor(CompetitorId) {}
-	void print_competitors() {
-		for (const auto& [id, comp] : competitors) {
-			std::println("ID: {}, Competitor: {}", id, comp);
-		}
-	}
-	int get_competitor_count() { return competitors.size(); }
-    ReportResult report_match(CompetitorId /*winner*/) { return ReportResult::Success; }
+    std::expected<void, std::string> begin_tournament();
+    std::expected<State, std::string> complete_round();
+    void add_competitors(std::span<const Competitor>);
+    Status get_current_status() const { return {state.first, state.second, current_matches, competitor_points}; }
+    const Competitor& get_competitor(CompetitorId id) const { return competitors.find(id)->second; }
+    unsigned get_competitor_points(CompetitorId) const;
+
+    ReportResult report_match(CompetitorId winner);
 
 private:
     std::unique_ptr<System> system;
     std::map<CompetitorId, Competitor> competitors;
     std::pair<State, RoundNum> state = {State::Signups, 0};
-    std::vector<Match> current_matches;
+    Pairings current_matches;
 
     std::set<CompetitorId> out_of_tournament;
-    std::map<CompetitorId, Points> competitor_points;
-	CompetitorId next_competitor_id = 0;
+    Scores competitor_points;
 };
 
 class Tournament::RoundRobin: public Tournament::System
 {
 public:
     std::string_view get_description() override { return "każdy z każdym"; };
-    size_t get_rounds(std::span<const Competitor>) override { return 0; };
-    void prepare_pairings(std::span<const Competitor>) override {};
+    size_t get_rounds(CompetitorsMap&) override { return 2; };
+    void prepare_pairings(CompetitorsMap&, Pairings&) override {};
+    std::expected<void, std::string> can_begin_tournament(CompetitorsMap&) override { return {}; };
+    void score_competitors(const Pairings&, Scores&, std::set<CompetitorId>&) override {};
 private:
 };
 
@@ -132,5 +124,5 @@ private:
 
 //class SingleElimination: public Tournament::System
 //{
-//   
+//
 //};

@@ -25,62 +25,112 @@ void tournament_options(Tournament& tour)
     while (running_tour)
     {
         int choice;
-        std::println("Dostępne opcje turnieju:\n1. Dodaj zawodników\n2. Rozpocznij turniej\n3. Zgłoś wynik\n4. Zakończ rundę\n5. Wyświetl aktualny status\n6. Przerwij turniej");
+        std::println("**************************************\nDostępne opcje turnieju:\n1. Dodaj zawodników\n2. Rozpocznij turniej\n3. Zgłoś wynik\n4. Zakończ rundę\n5. Wyświetl aktualny status\n6. Przerwij turniej");
         std::cin >> choice;
 
         switch (choice)
         {
         case 1:
         {
-			if (tour.get_current_tour_state() == Tournament::State::InProgress) {
+			if (tour.get_current_status().state != Tournament::State::Signups) {
 				std::println("Nie można dodawać zawodników po rozpoczęciu turnieju.");
 				continue;
 			}
-            std::println("Wybrano opcję dodawania zawodników.");
-            std::vector<Competitor> competitors = create_competitors();
-            tour.add_competitors(competitors);
-            tour.print_competitors();
+            tour.add_competitors(create_competitors());
             break;
         }
         case 2:
         {
-            std::println("Wybrano opcję rozpoczęcia turnieju.");
-            if (tour.get_competitor_count() == 0)
-            {
-				std::println("Nie można rozpocząć turnieju bez zawodników.");
-				continue;
-            }
-            else if (tour.get_competitor_count() % 2 != 0)
-            {
-				std::println("Liczba zawodników musi być parzysta.");
-                continue;
-			}
 			auto begin_result = tour.begin_tournament();
             if (!begin_result) {
                 std::println("Błąd przy rozpoczęciu turnieju: {}", begin_result.error());
-            }
                 break;
+            }
+            std::println("Turniej rozpoczęty! Zaczyna się runda 1:");
+            for (const auto& m: tour.get_current_status().matches) {
+                std::println("\t[{}]: {} (białe) vs {} (czarne)", m.table_number, tour.get_competitor(m.white), tour.get_competitor(m.black));
+            }
+            break;
         }
         case 3:
         {
-            std::println("Wybrano opcję zgłaszania wyniku.");
-            // tour.report_match(0); 
+            if (tour.get_current_status().state != Tournament::State::InProgress) {
+                std::println("Nie można zgłaszać wyników, gdy nie jesteśmy w trakcie rundy.");
+                break;
+            }
+            std::print("Podaj ID gracza który wygrał: ");
+            Tournament::CompetitorId id;
+            std::cin >> id;
+            auto report_result = tour.report_match(id);
+            switch (report_result) {
+            case Tournament::ReportResult::AlreadyReported:
+                std::println("Wynik tego meczu już został zgłoszony.");
+                break;
+            case Tournament::ReportResult::PlayerDroppedOut:
+                std::println("Ten gracz odpadł już z turnieju.");
+                break;
+            case Tournament::ReportResult::Success:
+                std::println("Sukces");
+                break;
+            }
             break;
         }
         case 4:
         {
-            std::println("Wybrano opcję zakończenia rundy.");
-            // tour.complete_round();
+            auto complete_result = tour.complete_round();
+            if (!complete_result) {
+                std::println("Błąd przy zakończeniu rundy: {}", complete_result.error());
+                break;
+            }
+            if (complete_result.value() == Tournament::State::Finished) {
+                std::println("To była ostatnia runda. Wyniki końcowe:");
+                // todo: wyniki końcowe
+            } else {
+                std::println("Zakończono rundę {}. Rozpoczyna się runda {}", tour.get_current_status().round_number-1, tour.get_current_status().round_number);
+                for (const auto& m: tour.get_current_status().matches) {
+                    std::println("\t[{}]: {} (białe) vs {} (czarne)", m.table_number, tour.get_competitor(m.white), tour.get_competitor(m.black));
+                }
+            }
             break;
         }
         case 5:
         {
-            std::println("Wybrano opcję wyświetlenia aktualnego statusu.");
+            auto status = tour.get_current_status();
+            switch(status.state) {
+            case Tournament::State::Signups:
+                std::println("Trwają zapisy zawodników. Do tej pory zapisano {} zawodników:", tour.get_current_status().scores.size());
+                for (auto [comp, score]: tour.get_current_status().scores) {
+                    std::println("\t{}", tour.get_competitor(comp));
+                }
+                break;
+            case Tournament::State::Finished:
+                std::println("Turniej został zakończony.");
+                // todo: wyniki końcowe
+                break;
+            case Tournament::State::InProgress:
+                std::println("Runda {}", status.round_number);
+                for (const auto& m: status.matches) {
+                    std::print("\t[{}]: {} (białe) vs {} (czarne) - ", m.table_number, tour.get_competitor(m.white), tour.get_competitor(m.black));
+                    switch(m.status) {
+                    case Tournament::Match::Status::InProgress:
+                        std::println("w trakcie");
+                        break;
+                    case Tournament::Match::Status::WhiteWon:
+                        std::println("wygrały białe");
+                        break;
+                    case Tournament::Match::Status::BlackWon:
+                        std::println("wygrały czarne");
+                        break;
+                    case Tournament::Match::Status::Drawn:
+                        std::println("remis");
+                        break;
+                    }
+                }
+            }
             break;
         }
         case 6:
         {
-            std::println("Wybrano opcję zakończenia turnieju.");
             running_tour = false;
             break;
         }
@@ -88,18 +138,15 @@ void tournament_options(Tournament& tour)
             std::println("Niepoprawny wybór.");
         }
     }
-    
 }
 
 int main()
 {
-
     std::println("Zarządzanie turniejem szachowym - wybierz rodzaj rozgrywek:\n"
 		"1. Każdy z każdym\n2. Pucharowy\n");
 	int choice;
 	std::cin >> choice;
 
-    
 	switch (choice) {
     case 1:
     {
@@ -116,42 +163,5 @@ int main()
 	default:
 		std::println("Niepoprawny wybór.");
 	}
-    // tworzymy turniej typu każdy z każdym
-    // Tournament tour{std::make_unique<Tournament::RoundRobin>()};
-    /*
-    // przed rozpoczęciem turnieju dodajemy zawodników
-    Competitor comp1{"Andrzej", "Awokado"};
-    Competitor comp2{"Beata", "Bulwa"};
-    Competitor comp3{"Cezary", "Cebula"};
-    Competitor comp4{"Dariusz", "Daleki"};
-
-    std::println("Print test: dwoje pierwszych zawodników to {} i {}.", comp1, comp2);
-    tour.add_competitors({{comp1, comp2, comp3, comp4}});
-
-    // po dodaniu zawodników rozpoczynamy turniej
-    auto begin_result = tour.begin_tournament();
-    if (!begin_result) {
-        std::print("Błąd przy rozpoczęciu turnieju: {}", begin_result.error());
-    }
-    auto pairings = tour.get_current_status().matches;
-
-    // zgłaszamy wyniki
-    tour.report_match(0);
-    tour.report_match(2);
-
-    // po zgłoszeniu wszystkich wyników zakańczamy rundę
-    auto complete_result = tour.complete_round();
-    if (!complete_result) {
-        std::print("Błąd przy rozpoczęciu turnieju: {}", begin_result.error());
-    }
-    auto new_state = complete_result.value();
-    if (new_state== Tournament::State::Finished) {
-        // koniec turnieju, wyświetlamy ostateczne wyniki
-        auto scores = tour.get_current_status().scores;
-    } else {
-        // nowa runda, bierzemy nowe paringi
-        auto pairings = tour.get_current_status().matches;
-    }
-    */
     return 0;
 }
