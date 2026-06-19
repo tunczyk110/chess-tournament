@@ -7,6 +7,7 @@
 #include <expected>
 #include <set>
 
+#include <print>
 #include "competitor.hpp"
 
 class Tournament
@@ -71,13 +72,32 @@ public:
     {}
 
     // methods
-    std::expected<void, std::string> begin_tournament() { return {}; }
+    std::expected<void, std::string> begin_tournament() {
+		if (state.first != State::Signups) {
+			return std::unexpected("Turniej już się rozpoczął lub zakończył.");
+		}
+		std::println("Rozpoczynam turniej typu: {}", system->get_description());
+		state.first = State::InProgress;
+        return {}; 
+    }
     std::expected<State, std::string> complete_round() { return state.second == 1 ? State::Finished : State::InProgress; }
-    void add_competitors(std::span<const Competitor>) {}
+    void add_competitors(std::span<const Competitor> comps)
+    {
+        for (const auto& x : comps)
+        {
+			competitors.emplace(next_competitor_id++, x);
+        }
+    }
     Status get_current_status() { return {state.second, current_matches, competitor_points}; }
+	State get_current_tour_state() { return state.first; }
     const Competitor& get_competitor(CompetitorId id) { return competitors.find(id)->second; }
     void drop_out_competitor(CompetitorId) {}
-
+	void print_competitors() {
+		for (const auto& [id, comp] : competitors) {
+			std::println("ID: {}, Competitor: {}", id, comp);
+		}
+	}
+	int get_competitor_count() { return competitors.size(); }
     ReportResult report_match(CompetitorId /*winner*/) { return ReportResult::Success; }
 
 private:
@@ -88,6 +108,7 @@ private:
 
     std::set<CompetitorId> out_of_tournament;
     std::map<CompetitorId, Points> competitor_points;
+	CompetitorId next_competitor_id = 0;
 };
 
 class Tournament::RoundRobin: public Tournament::System
@@ -109,7 +130,7 @@ private:
 
 // };
 
-// class SingleElimination: public Tournament::System
-// {
-
-// };
+//class SingleElimination: public Tournament::System
+//{
+//   
+//};

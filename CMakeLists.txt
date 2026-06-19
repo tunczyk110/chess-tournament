@@ -5,4 +5,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(chess-tournament src/main.cpp)
 target_compile_options(chess-tournament PUBLIC -std=gnu++26 -Wall -Wpedantic -Wextra -Werror)
+target_link_libraries(chess-tournament -lstdc++exp)
 add_subdirectory(src)
