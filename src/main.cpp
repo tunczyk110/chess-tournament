@@ -61,19 +61,26 @@ void tournament_options(Tournament& tour)
                 std::println("Nie można zgłaszać wyników, gdy nie jesteśmy w trakcie rundy.");
                 break;
             }
-            std::print("Podaj ID gracza który wygrał: ");
-            Tournament::CompetitorId id;
-            std::cin >> id;
-            auto report_result = tour.report_match(id);
+            std::print("Podaj numer stolika oraz rezultat meczu [B,C,R]: ");
+            size_t table_num;
+            char result;
+            std::cin >> table_num >> result;
+            auto report_result = tour.report_match(table_num, result);
             switch (report_result) {
             case Tournament::ReportResult::AlreadyReported:
-                std::println("Wynik tego meczu już został zgłoszony.");
+                std::println("\nWynik tego meczu już został zgłoszony.");
                 break;
             case Tournament::ReportResult::PlayerDroppedOut:
-                std::println("Ten gracz odpadł już z turnieju.");
+                std::println("\nTen gracz odpadł już z turnieju.");
+                break;
+            case Tournament::ReportResult::WrongTableNumber:
+                std::println("\nNie ma stolika o takim numerze");
+                break;
+            case Tournament::ReportResult::WrongResultChar:
+                std::println("\nNie jest to prawidłowy kod wyniku (B - wygrana białych, C - wygrana czarnych, R - remis)");
                 break;
             case Tournament::ReportResult::Success:
-                std::println("Sukces");
+                std::println("\nSukces");
                 break;
             }
             break;
