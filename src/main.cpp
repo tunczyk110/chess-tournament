@@ -70,9 +70,6 @@ void tournament_options(Tournament& tour)
             case Tournament::ReportResult::AlreadyReported:
                 std::println("\nWynik tego meczu już został zgłoszony.");
                 break;
-            case Tournament::ReportResult::PlayerDroppedOut:
-                std::println("\nTen gracz odpadł już z turnieju.");
-                break;
             case Tournament::ReportResult::WrongTableNumber:
                 std::println("\nNie ma stolika o takim numerze");
                 break;

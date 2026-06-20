@@ -1,5 +1,6 @@
 #include "tournament.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <print>
 
@@ -101,9 +102,21 @@ unsigned Tournament::get_competitor_points(CompetitorId comp_id) const
 
 void Tournament::print_results()
 {
-    for (const auto& [comp, result] : competitor_points)
+    struct R {
+        Competitor c;
+        unsigned pts;
+        CompetitorResults result;
+    };
+    std::vector<R> results;
+    std::ranges::transform(competitor_points, std::back_inserter(results), [&] (const auto& cp){
+        return R{get_competitor(cp.first), get_competitor_points(cp.first), cp.second};
+    });
+    std::ranges::sort(results, [] (const auto& r1, const auto& r2) {
+        return r1.pts > r2.pts;
+    });
+    for (const auto& r: results)
     {
-		std::println("{}: {} punktów - {} wygranych, {} remisów, {} przegranych)", competitors.find(comp)->second, get_competitor_points(comp), result.won, result.drawn, result.lost);
+		std::println("{}: {} pkt. - {} wygranych, {} remisów, {} przegranych)", r.c, r.pts, r.result.won, r.result.drawn, r.result.lost);
     }
 }
 

@@ -23,7 +23,7 @@ void RoundRobin::prepare_pairings(Tournament::CompetitorsMap& comps, Tournament:
     std::set<Tournament::CompetitorId> left_to_pair_this_round;
     std::ranges::transform(comps, std::inserter(left_to_pair_this_round, left_to_pair_this_round.end()), [] (auto& c) { return c.first; });
 
-    size_t table = 0;
+    size_t table = 1;
     for (auto comp_it = left_to_pair_this_round.begin(); comp_it != left_to_pair_this_round.end();) {
         Tournament::CompetitorId opp_id = 0;
         for (auto id: remaining_matchups[*comp_it]) {

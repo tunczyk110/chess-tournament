@@ -9,25 +9,65 @@
 
 #include "competitor.hpp"
 
+/**
+ * Zawiera wyniki gracza w turnieju.
+ */
 struct CompetitorResults
 {
-    size_t won = 0, lost = 0, drawn = 0;
+    /**
+     * Ilość wygranych rund.
+     */
+    size_t won = 0;
+
+    /**
+     * Ilość przegranych rund.
+     */
+    size_t lost = 0;
+
+    /**
+     * Ilość zremisowanych rund.
+     */
+    size_t drawn = 0;
 };
 
 class Tournament
 {
 public:
+    /**
+     * ID przypisane danemu zawodnikowi w turnieju.
+     */
     using CompetitorId = int;
+
+    /**
+     * Typ oznaczający numer rozgrywanej rundy.
+     */
     using RoundNum = size_t;
 
     /**
      * Struktura opisująca mecz w danej rundzie.
      */
     struct Match {
+
+        /**
+         * Enumeracja opisująca status meczu.
+         */
         enum class Status {
+            /**
+             * Mecz jest w trakcie gry.
+             */
             InProgress,
+            /**
+             * Wygrana białych.
+             */
             WhiteWon,
+            /**
+             * Wygrana czarnych.
+             */
             BlackWon,
+
+            /**
+             * Partia zremisowana.
+             */
             Drawn
         };
 
@@ -47,13 +87,24 @@ public:
         size_t table_number;
 
         /**
-         * Numer stolika przy którym rozegrany zostanie mecz.
+         * Status meczu.
          */
         Status status;
     };
 
+    /**
+     * Typ kontenera meczy rozgrywanych w rundzie.
+     */
     using Pairings = std::vector<Match>;
+
+    /**
+     * Typ kontenera wyników graczy.
+     */
     using Scores = std::map<CompetitorId, CompetitorResults>;
+
+    /**
+     * Typ kontenera zawodników turnieju.
+     */
     using CompetitorsMap = std::map<CompetitorId, Competitor>;
 
     /**
@@ -61,19 +112,72 @@ public:
      */
     class System {
     public:
-
+        /**
+         * Daje tekstowy opis danego systemu turniejowego.
+         *
+         * @return Widok na napis.
+         */
         virtual std::string_view get_description() = 0;
-        virtual RoundNum get_rounds(CompetitorsMap&) = 0;
-        virtual void prepare_pairings(CompetitorsMap&, Pairings&) = 0;
-        virtual std::expected<void, std::string> can_begin_tournament(CompetitorsMap&) = 0;
-        virtual void score_competitors(const Pairings&, Scores&, std::set<CompetitorId>&) = 0;
+        /**
+         *  Podaje ilość rund przewidywanych przez system turniejowy dla danej ilości graczy.
+         *
+         * @param comp Kontener zawodników turnieju.
+         * @return Całkowiwta ilość rund do rozegrania.
+         */
+        virtual RoundNum get_rounds(CompetitorsMap& comp) = 0;
 
-        virtual ~System() {}
+        /**
+         * Przygotowuje pary na następną rundę turnieju.
+         *
+         * @param[in] comp Kontener zawodników turnieju.
+         * @param[out] par Kontener z przygotowanymi meczami na następną rundę.
+         */
+        virtual void prepare_pairings(CompetitorsMap& comp, Pairings& par) = 0;
+
+        /**
+         * Sprawdza, czy turniej jest w stanie umożliwiającym rozpoczęcie.
+         *
+         * @oaram comp Kontener zawodników turnieju.
+         * @return void, jeśli turniej można rozpocząć. W przeciwnym razie std::string zawierający opis nieprawidłowości.
+         */
+        virtual std::expected<void, std::string> can_begin_tournament(CompetitorsMap& comp) = 0;
+
+
+        /**
+         * Zapisuje wyniki z danej rundy turniejowej. Wywoływana w procedurze zakończenia rundy.
+         *
+         * @oaram[in] par Kontener meczy rozegranych w danej rundzie.
+         * @param[out] scores Kontener z punktacją graczy w turnieju.
+         * @param[out] out Kontener z ID graczy wyeliminowanych z turnieju.
+         */
+        virtual void score_competitors(const Pairings& par, Scores& scores, std::set<CompetitorId>& out) = 0;
+
+
+        /**
+         * Domyślny destruktor wirtualny.
+         */
+        virtual ~System() = default;
     };
 
+
+    /**
+     * Enumeracja opisująca wartość maszyny stanów turnieju.
+     */
     enum class State {
+
+        /**
+         * Turniej jest w fazie zapisów.
+         */
         Signups,
+
+        /**
+         * Turniej jest w fazie rozgrywki.
+         */
         InProgress,
+
+        /**
+         * Turniej został zakończony.
+         */
         Finished
     };
 
@@ -82,26 +186,61 @@ public:
      */
     struct Status
     {
+        /**
+         * Obecna wartość maszyny stanów turnieju.
+         */
         State state;
-        // if state isn't InProgress, values of following fields are meaningless
+
+        /**
+         * Numer obecnie rozgrywanej rundy.
+         *
+         * Jeśli `state` nie jest `InProgress`, wartość składnika jest niezdefiniowana.
+         */
         RoundNum round_number;
+
+        /**
+         * Kontener meczy rozgrywanych w obecnej rundzie.
+         *
+         * Jeśli `state` nie jest `InProgress`, wartość składnika jest niezdefiniowana.
+         */
         const Pairings& matches;
+
+
+        /**
+         * Kontener punktacji graczy w turnieju.
+         *
+         * Jeśli `state` jest `Signups`, wartość składnika jest niezdefiniowana.
+         */
         const Scores& scores;
     };
 
     /**
-     * Specjalny ID zawodnika używany w paringach przypadku "bye"
+     * Rezultat operacji zgłoszenia wyniku.
      */
     enum class ReportResult {
+        /**
+         * Pomyślnie zapisano wynik.
+         */
         Success,
+
+        /**
+         * Wynik tego meczu został zgłoszony wcześniej.
+         */
         AlreadyReported,
-        PlayerDroppedOut,
+
+        /**
+         * Podano nieprawidłowy numer stolika.
+         */
         WrongTableNumber,
+
+        /**
+         * Podano nieprawidłowy rezultat partii.
+         */
         WrongResultChar
     };
 
     /**
-     * Specjalny ID zawodnika używany w paringach przypadku "bye"
+     * ID zawodnika używany w paringach przypadku "bye"
      */
     static constexpr CompetitorId COMP_BYE = -1;
 
@@ -126,7 +265,7 @@ public:
     /**
      * Metoda zakańcza obecną rundę.
      *
-     * Turniej nie może być już rozpoczęty, i zapisana musi być odpowiednia ilość graczy dla danego systemu turniejowego.
+     * Turniej musi być rozpoczęty oraz niezakończony.
      *
      * @return Nowy stan turnieju, jeśli operacja przebiegła pomyślnie: InProgress, jeśli rozpoczęła się kolejna runda, lub Finished, jeśli była to runda ostatnia. W przypadku błędu std::string zawierający opis błędu.
      */
@@ -177,10 +316,14 @@ public:
      *
      * @param table_num Numer stolika identyfikujący mecz.
      * @param result Znak oznaczający wynik do zapisania: 'B' oznacza wygranę białych, 'C' oznacza wygraną czarnych, 'R' oznacza remis.
-     * @return Enum oznaczający rezultat operacji.
+     * @return Enumeracja oznaczający rezultat operacji.
      */
     ReportResult report_match(size_t table_num, char result);
 
+
+    /**
+     * Wyświetla wyniki turnieju.
+     */
     void print_results();
 
 private:
@@ -194,13 +337,3 @@ private:
     std::set<CompetitorId> out_of_tournament;
     Scores competitor_points;
 };
-
-// class DoubleRoundRobin: public Tournament::System
-// {
-
-// };
-
-// class Swiss: public Tournament::System
-// {
-
-// };
