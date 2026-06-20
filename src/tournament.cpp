@@ -37,6 +37,7 @@ std::expected<Tournament::State, std::string> Tournament::complete_round()
         return std::unexpected("nie wszystkie mecze są zakończone");
     }
 
+    track_results();
     system->score_competitors(current_matches, competitor_points, out_of_tournament);
 
     // check if this round is the last round of tournament
@@ -103,5 +104,27 @@ void Tournament::print_results()
     for (const auto& [comp, result] : competitor_points)
     {
 		std::println("{}: {} punktów - {} wygranych, {} remisów, {} przegranych)", competitors.find(comp)->second, get_competitor_points(comp), result.won, result.drawn, result.lost);
+    }
+}
+
+void Tournament::track_results()
+{
+    for (const auto& m: current_matches) {
+        switch (m.status) {
+        case Tournament::Match::Status::WhiteWon:
+            competitor_points[m.white].won += 1;
+            competitor_points[m.black].lost += 1;
+            break;
+        case Tournament::Match::Status::BlackWon:
+            competitor_points[m.black].won += 1;
+            competitor_points[m.white].lost += 1;
+            break;
+        case Tournament::Match::Status::Drawn:
+            competitor_points[m.black].drawn += 1;
+            competitor_points[m.white].drawn += 1;
+            break;
+        default:
+            throw std::runtime_error{std::format("unexpected match status when scoring {} vs {}; state is {}", m.white, m.black, int(m.status))};
+        }
     }
 }

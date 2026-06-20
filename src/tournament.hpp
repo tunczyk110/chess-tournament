@@ -184,6 +184,8 @@ public:
     void print_results();
 
 private:
+    void track_results();
+
     std::unique_ptr<System> system;
     std::map<CompetitorId, Competitor> competitors;
     std::pair<State, RoundNum> state = {State::Signups, 0};

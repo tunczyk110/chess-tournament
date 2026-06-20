@@ -49,25 +49,3 @@ std::expected<void, std::string> RoundRobin::can_begin_tournament(Tournament::Co
     }
     return {};
 }
-
-void RoundRobin::score_competitors(const Tournament::Pairings& matches, Tournament::Scores& scores, std::set<Tournament::CompetitorId>&)
-{
-    for (const auto& m: matches) {
-        switch (m.status) {
-        case Tournament::Match::Status::WhiteWon:
-            scores[m.white].won += 1;
-            scores[m.black].lost += 1;
-            break;
-        case Tournament::Match::Status::BlackWon:
-            scores[m.black].won += 1;
-            scores[m.white].lost += 1;
-            break;
-        case Tournament::Match::Status::Drawn:
-            scores[m.black].drawn += 1;
-            scores[m.white].drawn += 1;
-            break;
-        default:
-            throw std::runtime_error{std::format("unexpected match status when scoring {} vs {}; state is {}", m.white, m.black, int(m.status))};
-        }
-    }
-}
