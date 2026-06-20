@@ -1,0 +1,12 @@
+@startuml
+
+abstract class "Tournament::System" as System
+class "RoundRobin"
+class "SingleElimination"
+class "Tournament"
+
+System <|.. RoundRobin
+System <|.. SingleElimination
+Tournament o-- System
+
+@enduml

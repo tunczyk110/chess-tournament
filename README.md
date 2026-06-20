@@ -31,6 +31,10 @@ Doxygen:
 
 `doxygen doxy.conf`
 
+PlantUML:
+
+`plantuml uml/system.uml`
+
 ## Autorzy
 
 Michał Tomczyk, Łukasz Tomczyk
