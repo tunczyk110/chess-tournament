@@ -1,5 +1,6 @@
 #pragma once
 #include "tournament.hpp"
+#include <random>
 
 class SingleElimination: public Tournament::System
 {
@@ -11,4 +12,5 @@ public:
     void score_competitors(const Tournament::Pairings&, Tournament::Scores&, std::set<Tournament::CompetitorId>&) override;
 private:
 	std::set<Tournament::CompetitorId> eliminatedPlayers;
+    std::mt19937 g{ std::random_device{}() };
 };

@@ -1,6 +1,6 @@
 #include "singleElimination.hpp"
 
-#include <random>
+
 
 std::expected<void, std::string> SingleElimination::can_begin_tournament(Tournament::CompetitorsMap& competitors)
 {
@@ -29,7 +29,7 @@ void SingleElimination::prepare_pairings(Tournament::CompetitorsMap& competitors
 			active_comps.push_back(id);
 		}
 	}
-	std::shuffle(active_comps.begin(), active_comps.end(), std::mt19937{ std::random_device{}() });
+	std::shuffle(active_comps.begin(), active_comps.end(), g);
 	for (size_t i = 0; i < active_comps.size(); i += 2)
 	{
 		pairings.push_back({ active_comps[i], active_comps[i + 1], static_cast<unsigned>(i / 2 + 1), Tournament::Match::Status::InProgress });

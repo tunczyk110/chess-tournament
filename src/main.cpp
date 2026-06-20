@@ -87,7 +87,7 @@ void tournament_options(Tournament& tour)
             }
             if (complete_result.value() == Tournament::State::Finished) {
                 std::println("To była ostatnia runda. Wyniki końcowe:");
-                // todo: wyniki końcowe
+				tour.print_results();
             } else {
                 std::println("Zakończono rundę {}. Rozpoczyna się runda {}", tour.get_current_status().round_number-1, tour.get_current_status().round_number);
                 for (const auto& m: tour.get_current_status().matches) {
@@ -108,7 +108,7 @@ void tournament_options(Tournament& tour)
                 break;
             case Tournament::State::Finished:
                 std::println("Turniej został zakończony.");
-                // todo: wyniki końcowe
+                tour.print_results();
                 break;
             case Tournament::State::InProgress:
                 std::println("Runda {}", status.round_number);
@@ -154,14 +154,14 @@ int main()
     case 1:
     {
         std::println("Wybrano rozgrywki typu każdy z każdym.");
-        Tournament tour = { std::make_unique<RoundRobin>() };
+        Tournament tour{ std::make_unique<RoundRobin>() };
         tournament_options(tour);
         break;
     }
     case 2:
     {
         std::println("Wybrano rozgrywki pucharowe.");
-        Tournament tour = { std::make_unique<SingleElimination>() };
+        Tournament tour{ std::make_unique<SingleElimination>() };
         tournament_options(tour);
         break;
     }

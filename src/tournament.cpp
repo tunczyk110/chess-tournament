@@ -1,6 +1,7 @@
 #include "tournament.hpp"
 
 #include <stdexcept>
+#include <print>
 
 std::expected<void, std::string> Tournament::begin_tournament()
 {
@@ -90,4 +91,12 @@ unsigned Tournament::get_competitor_points(CompetitorId comp_id) const
     auto&[_, comp] = *comp_it;
 
     return 2*comp.won + comp.drawn;
+}
+
+void Tournament::print_results()
+{
+    for (const auto& [comp, result] : competitor_points)
+    {
+		std::println("{}: {} punktów - {} wygranych, {} remisów, {} przegranych)", competitors.find(comp)->second, get_competitor_points(comp), result.won, result.drawn, result.lost);
+    }
 }

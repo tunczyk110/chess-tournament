@@ -166,6 +166,8 @@ public:
 
     ReportResult report_match(CompetitorId winner);
 
+    void print_results();
+
 private:
     std::unique_ptr<System> system;
     std::map<CompetitorId, Competitor> competitors;
