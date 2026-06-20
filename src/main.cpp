@@ -1,8 +1,10 @@
+#include <print>
+#include <iostream>
+
 #include "tournament.hpp"
 #include "competitor.hpp"
 
-#include <print>
-#include <iostream>
+#include "round_robin.hpp"
 
 std::vector<Competitor> create_competitors()
 {
@@ -151,7 +153,7 @@ int main()
     case 1:
     {
         std::println("Wybrano rozgrywki typu każdy z każdym.");
-        Tournament tour = { std::make_unique<Tournament::RoundRobin>() };
+        Tournament tour = { std::make_unique<RoundRobin>() };
         tournament_options(tour);
         break;
     }

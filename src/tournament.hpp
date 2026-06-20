@@ -7,7 +7,6 @@
 #include <expected>
 #include <set>
 
-#include <print>
 #include "competitor.hpp"
 
 struct CompetitorResults
@@ -71,8 +70,6 @@ public:
         PlayerDroppedOut
     };
 
-    class RoundRobin;
-
     // constants
     static constexpr CompetitorId COMP_BYE = -1;
 
@@ -99,17 +96,6 @@ private:
 
     std::set<CompetitorId> out_of_tournament;
     Scores competitor_points;
-};
-
-class Tournament::RoundRobin: public Tournament::System
-{
-public:
-    std::string_view get_description() override { return "każdy z każdym"; };
-    size_t get_rounds(CompetitorsMap&) override { return 2; };
-    void prepare_pairings(CompetitorsMap&, Pairings&) override {};
-    std::expected<void, std::string> can_begin_tournament(CompetitorsMap&) override { return {}; };
-    void score_competitors(const Pairings&, Scores&, std::set<CompetitorId>&) override {};
-private:
 };
 
 // class DoubleRoundRobin: public Tournament::System

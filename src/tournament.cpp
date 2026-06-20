@@ -65,6 +65,10 @@ auto Tournament::report_match(CompetitorId winner) -> ReportResult
         throw std::invalid_argument{"nieprawidłowy ID zawodnika"};
     }
 
+    if (match_it->status != Match::Status::InProgress) {
+        return ReportResult::AlreadyReported;
+    }
+
     if (match_it->white == winner) {
         match_it->status = Match::Status::WhiteWon;
     } else {
