@@ -108,7 +108,3 @@ private:
 
 // };
 
-//class SingleElimination: public Tournament::System
-//{
-//
-//};

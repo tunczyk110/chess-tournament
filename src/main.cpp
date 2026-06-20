@@ -5,6 +5,7 @@
 #include "competitor.hpp"
 
 #include "round_robin.hpp"
+#include "singleElimination.hpp"
 
 std::vector<Competitor> create_competitors()
 {
@@ -160,6 +161,8 @@ int main()
     case 2:
     {
         std::println("Wybrano rozgrywki pucharowe.");
+        Tournament tour = { std::make_unique<SingleElimination>() };
+        tournament_options(tour);
         break;
     }
 	default:
