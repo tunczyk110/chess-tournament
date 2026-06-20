@@ -12,7 +12,7 @@ public:
     size_t get_rounds(Tournament::CompetitorsMap&) override;
     void prepare_pairings(Tournament::CompetitorsMap&, Tournament::Pairings&) override;
     std::expected<void, std::string> can_begin_tournament(Tournament::CompetitorsMap&) override;
-    void score_competitors(const Tournament::Pairings&, Tournament::Scores&, std::set<Tournament::CompetitorId>&) override;
+    void score_competitors(const Tournament::Pairings&, Tournament::Scores&, std::set<Tournament::CompetitorId>&) override {};
 private:
     std::map<Tournament::CompetitorId, std::set<Tournament::CompetitorId>> remaining_matchups;
 };

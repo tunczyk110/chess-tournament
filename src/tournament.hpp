@@ -95,7 +95,9 @@ public:
     enum class ReportResult {
         Success,
         AlreadyReported,
-        PlayerDroppedOut
+        PlayerDroppedOut,
+        WrongTableNumber,
+        WrongResultChar
     };
 
     /**
@@ -141,6 +143,7 @@ public:
 
     /**
      * Metoda zwraca obecny stan turnieju.
+     *
      * Można ją wywołać w dowolnym momencie.
      *
      * @return Obecny stan turnieju.
@@ -150,6 +153,8 @@ public:
     /**
      * Metoda zwraca strukturę z danymi zawodnika o podanym ID.
      *
+     * Można ją wywołać w dowolnym momencie.
+     *
      * @param id ID zawodnika.
      * @return Struktura zawierająca dane zawodnika.
      */
@@ -157,18 +162,30 @@ public:
 
     /**
      * Metoda zwraca ilość punktów uzyskanych przez danego zawodnika w turnieju.
-     * Jeśli jest wywołana przed zakończeniem turnieju, wynik z bieżącej rundy nie jest brany pod uwagę.
+     *
+     * Można ją wywołać w dowolnym momencie. Jeśli jest wywołana przed zakończeniem turnieju, wynik z bieżącej rundy nie jest brany pod uwagę.
      *
      * @param id ID zawodnika.
      * @return Struktura zawierająca dane zawodnika.
      */
     unsigned get_competitor_points(CompetitorId) const;
 
-    ReportResult report_match(CompetitorId winner);
+    /**
+     * Metoda zapisuje wynik meczu.
+     *
+     * Może być wywołana tylko w trakcie turnieju, przed zakończeniem ostatniej rundy.
+     *
+     * @param table_num Numer stolika identyfikujący mecz.
+     * @param result Znak oznaczający wynik do zapisania: 'B' oznacza wygranę białych, 'C' oznacza wygraną czarnych, 'R' oznacza remis.
+     * @return Enum oznaczający rezultat operacji.
+     */
+    ReportResult report_match(size_t table_num, char result);
 
     void print_results();
 
 private:
+    void track_results();
+
     std::unique_ptr<System> system;
     std::map<CompetitorId, Competitor> competitors;
     std::pair<State, RoundNum> state = {State::Signups, 0};
@@ -187,4 +204,3 @@ private:
 // {
 
 // };
-
