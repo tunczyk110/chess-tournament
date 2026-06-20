@@ -53,11 +53,6 @@ std::expected<void, std::string> RoundRobin::can_begin_tournament(Tournament::Co
 void RoundRobin::score_competitors(const Tournament::Pairings& matches, Tournament::Scores& scores, std::set<Tournament::CompetitorId>&)
 {
     for (const auto& m: matches) {
-        if (m.status == Tournament::Match::Status::WhiteWon) {
-            scores[m.white].won += 1;
-        } else if (m.status == Tournament::Match::Status::BlackWon) {
-
-        }
         switch (m.status) {
         case Tournament::Match::Status::WhiteWon:
             scores[m.white].won += 1;

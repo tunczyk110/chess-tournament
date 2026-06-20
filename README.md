@@ -25,6 +25,12 @@ Wymagany Visual Studio
 2. Ctrl+Shift+B aby skompilować
 3. Ctrl+F5 aby uruchomić
 
+## Dokumentacja
+
+Doxygen:
+
+`doxygen doxy.conf`
+
 ## Autorzy
 
 Michał Tomczyk, Łukasz Tomczyk

@@ -8,6 +8,9 @@ std::expected<void, std::string> Tournament::begin_tournament()
         return std::unexpected(std::format("nie można rozpocząć turnieju: {}", begin_res.error()));
     }
     auto&[state, round_num] = this->state;
+    if (state != State::Signups) {
+        return std::unexpected(std::format("nie można rozpocząć turnieju: turniej został już rozpoczęty"));
+    }
     state = State::InProgress;
     round_num = 1;
     system->prepare_pairings(competitors, current_matches);
