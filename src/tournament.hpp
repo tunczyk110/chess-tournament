@@ -17,10 +17,12 @@ struct CompetitorResults
 class Tournament
 {
 public:
-    // types
     using CompetitorId = int;
     using RoundNum = size_t;
 
+    /**
+     * Struktura opisująca mecz w danej rundzie.
+     */
     struct Match {
         enum class Status {
             InProgress,
@@ -29,8 +31,24 @@ public:
             Drawn
         };
 
-        CompetitorId white, black;
+        /**
+         * ID zawodnika grającego białymi.
+         */
+        CompetitorId white;
+
+        /**
+         * ID zawodnika grającego czarnymi.
+         */
+        CompetitorId black;
+
+        /**
+         * Numer stolika przy którym rozegrany zostanie mecz.
+         */
         size_t table_number;
+
+        /**
+         * Numer stolika przy którym rozegrany zostanie mecz.
+         */
         Status status;
     };
 
@@ -38,8 +56,12 @@ public:
     using Scores = std::map<CompetitorId, CompetitorResults>;
     using CompetitorsMap = std::map<CompetitorId, Competitor>;
 
+    /**
+     * Interfejs systemu organizacji turnieju.
+     */
     class System {
     public:
+
         virtual std::string_view get_description() = 0;
         virtual RoundNum get_rounds(CompetitorsMap&) = 0;
         virtual void prepare_pairings(CompetitorsMap&, Pairings&) = 0;
@@ -55,6 +77,9 @@ public:
         Finished
     };
 
+    /**
+     * Struktura opisująca obecny stan turnieju.
+     */
     struct Status
     {
         State state;
@@ -64,26 +89,79 @@ public:
         const Scores& scores;
     };
 
+    /**
+     * Specjalny ID zawodnika używany w paringach przypadku "bye"
+     */
     enum class ReportResult {
         Success,
         AlreadyReported,
         PlayerDroppedOut
     };
 
-    // constants
+    /**
+     * Specjalny ID zawodnika używany w paringach przypadku "bye"
+     */
     static constexpr CompetitorId COMP_BYE = -1;
 
-    // constructor
-    Tournament(std::unique_ptr<System>&& s):
-        system{std::move(s)}
+    /**
+     * Konstruktor klasy.
+     *
+     * @param system System organizacji dla danego turnieju.
+     */
+    explicit Tournament(std::unique_ptr<System>&& system):
+        system{std::move(system)}
     {}
 
-    // methods
+    /**
+     * Metoda rozpoczyna turniej i przygotowuje paringi na rundę pierwszą.
+     *
+     * Turniej nie może być już rozpoczęty, i zapisana musi być odpowiednia ilość graczy dla danego systemu turniejowego.
+     *
+     * @return void, jeśli operacja przebiegła pomyślnie. W przeciwnym wypadku std::string zawierający opis błędu.
+     */
     std::expected<void, std::string> begin_tournament();
+
+    /**
+     * Metoda zakańcza obecną rundę.
+     *
+     * Turniej nie może być już rozpoczęty, i zapisana musi być odpowiednia ilość graczy dla danego systemu turniejowego.
+     *
+     * @return Nowy stan turnieju, jeśli operacja przebiegła pomyślnie: InProgress, jeśli rozpoczęła się kolejna runda, lub Finished, jeśli była to runda ostatnia. W przypadku błędu std::string zawierający opis błędu.
+     */
     std::expected<State, std::string> complete_round();
-    void add_competitors(std::span<const Competitor>);
+
+    /**
+     * Metoda zapisuje zawodników do nowego turnieju.
+     *
+     * Turniej nie może być już rozpoczęty.
+     *
+     * @param competitors Lista zawodników do zapisania.
+     */
+    void add_competitors(std::span<const Competitor> competitors);
+
+    /**
+     * Metoda zwraca obecny stan turnieju.
+     * Można ją wywołać w dowolnym momencie.
+     *
+     * @return Obecny stan turnieju.
+     */
     Status get_current_status() const { return {state.first, state.second, current_matches, competitor_points}; }
+
+    /**
+     * Metoda zwraca strukturę z danymi zawodnika o podanym ID.
+     *
+     * @param id ID zawodnika.
+     * @return Struktura zawierająca dane zawodnika.
+     */
     const Competitor& get_competitor(CompetitorId id) const { return competitors.find(id)->second; }
+
+    /**
+     * Metoda zwraca ilość punktów uzyskanych przez danego zawodnika w turnieju.
+     * Jeśli jest wywołana przed zakończeniem turnieju, wynik z bieżącej rundy nie jest brany pod uwagę.
+     *
+     * @param id ID zawodnika.
+     * @return Struktura zawierająca dane zawodnika.
+     */
     unsigned get_competitor_points(CompetitorId) const;
 
     ReportResult report_match(CompetitorId winner);
